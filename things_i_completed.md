@@ -114,3 +114,39 @@ Still pending (not started):
 - End-to-end test of /vulcan flow on a specced feature
 - Plugin not yet committed to git
 - Future agents: Minerva (reviewer), customer-docs, log-analyzer (with version/label awareness)
+
+---
+
+Session Summary - 2026-05-27
+
+Bug Fix
+
+- DB seeding fix: dev_db.py was failing on recreate --seed due to SQLAlchemy inserting child rows before parent rows (nullable FK ordering issue). Fixed by adding _add_in_order() helper that flushes after each row.
+
+US-M1-03 - Client logger + shipping endpoint (3 pts) - Shipped
+
+Full four-skill lifecycle completed:
+- Vishwakarma - spec PR #3 (merged)
+- Nala - impl PR #4 (merged). Frontend global error handler (window.onerror / onunhandledrejection) with batched shipping (2s / 10-entry cap). Backend POST /api/v1/platform/client-logs + dev-only trace endpoint. 5 unit + 6 API tests.
+- Vyasa - impl notes + changelog
+- Gargi - FAQ PR #5 (merged)
+
+US-M1-05 - Tenant DB template + provisioning CLI (8 pts) - Shipped
+
+Full four-skill lifecycle completed:
+- Vishwakarma - spec PR #6 (merged)
+- Nala - impl PR #7 (merged). New tenancy/service.py with provision_tenant() (idempotent, rollback on failure), upgrade_all_tenants(). CLI subcommands tenant-init and tenant-upgrade-all. 2 unit + 7 API integration tests.
+- Vyasa - impl notes + changelog
+- Gargi - FAQ PR #8 (open, pending merge)
+
+Tracker State
+
+| Feature | Status |
+|---|---|
+| m3_03_late_fee_rules | Merged (prior) |
+| m1_03_client_logger | Merged |
+| m1_05_tenant_db_template | Merged |
+
+Next Up
+
+- US-M1-06 - Tenant context middleware + per-tenant session factory (depends on M1-05)

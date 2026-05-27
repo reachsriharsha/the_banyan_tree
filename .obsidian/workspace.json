@@ -11,10 +11,14 @@
             "id": "a636b4a3272fa4db",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "daily/2026/04/2026-04-29.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "2026-04-29"
             }
           }
         ]
@@ -179,6 +183,13 @@
   },
   "active": "a636b4a3272fa4db",
   "lastOpenFiles": [
+    "daily/2026/05/2026-05-27.md",
+    "daily/2026/05",
+    "sessions/session-2026-04-29-03-15-b5d3621f.md",
+    "sessions/session-2026-05-20-14-54-5aaa140a.md",
+    "sessions/session-2026-05-21-14-22-91cb0313.md",
+    "sessions/session-2026-05-27-14-16-729d23e7.md",
+    "sessions/session-2026-05-20-14-55-89be53f8.md",
     "sessions/session-2026-04-28-18-20-4099a8ba.md",
     "daily/2026/04/2026-04-29.md",
     "daily/2026/04/2026-04-17.md",
@@ -201,21 +212,14 @@
     "Untitled.md",
     "zzz_all_attachments/The-Complete-Guide-to-Building-Skill-for-Claude.pdf",
     "thoughts/README.md",
-    "things_to_go_through/List of things to go through.md",
-    "daily/2026/03/2026-03-07.md",
-    "Timestamps/2026/03-March/2026-03-08-Sunday.md",
-    "2026-03-18.md",
     "zzz_all_attachments/Pasted image 20260318093944.png",
     "zzz_all_attachments/Pasted image 20260318093801.png",
-    "hardware/Hardware related collections.md",
-    "things_to_go_through/To Do Reading.md",
     "hardware",
     "things_to_go_through",
     "projects/daari/daariparent",
     "projects/daari/DaariDriver/Untitled",
     "projects/daari/daaridriver",
     "projects/daari/daaricore",
-    "Timestamps/2026/03-March",
-    "Timestamps/2026"
+    "Timestamps/2026/03-March"
   ]
 }
