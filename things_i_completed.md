@@ -187,3 +187,10 @@ Security and Secrets Handling
   - removed plaintext token from versioned script
 - Rotated dev super-admin token across backend/.env and frontend/.env and kept values aligned without committing secrets.
 - Logged security concern in MVP plan section 14: tenants.dsn currently stores DB password in cleartext, marked for dedicated design discussion.
+
+Projects and Tooling Update
+
+- Worked on local setup of both pi.dev coding agent and Cursor with Ollama.
+- Model choice as of 2026-05-29: qwen 3.6.
+- Bought OpenClaw on 2026-05-28; use case is not finalized yet and moved into an exploration project.
+- Added a new hardware project after receiving M5Stack Stick S3: build a voice agent using Sarvam models.
