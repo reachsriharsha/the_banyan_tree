@@ -174,7 +174,7 @@ Testing, Debugging, and Reliability
 - Diagnosed 401 root cause as missing or mismatched platform-admin token and confirmed backend reads os.environ directly (no dotenv loader).
 - Added AKSHARA_LOG_FORMAT=text dev log toggle for human-readable local debugging logs with unit tests (PR #15, merged).
 - Backfilled real test counts for m1_05, m1_06, and m1_07 in the tracker and committed to main.
-- Root-caused create-tenant 500: make_tenant_dsn used str(url), masking password as ***.
+- Root-caused create-tenant 500: make_tenant_dsn used str(url), masking password as *** and breaking per-tenant DB auth.
 - Fixed DSN rendering with render_as_string(hide_password=False) and added regression test asserting password is preserved (PR #17, merged).
 - Verified end-to-end fix: real POST /api/v1/platform/tenants returns 201, tenant appears in list, and throwaway tenant was cleaned up.
 
@@ -186,4 +186,4 @@ Security and Secrets Handling
   - tracked e2e package-lock.json
   - removed plaintext token from versioned script
 - Rotated dev super-admin token across backend/.env and frontend/.env and kept values aligned without committing secrets.
-- Logged security concern in MVP plan section 14: tenants.dsn currently stores DB password in cleartext, pending dedicated design review.
+- Logged security concern in MVP plan section 14: tenants.dsn currently stores DB password in cleartext, marked for dedicated design discussion.
