@@ -1,5 +1,21 @@
 ---
 
+Session (2026-07-23) — E2E Flake Analysis
+
+**Project:** Akshara (akshara)
+
+**Work:** E2E test failure analysis for m3_08 receipt PDF generation
+- Analyzed 1 failed + 2 skipped tests in receipt-download.spec.ts
+- Root cause identified: PNG fixture (1×1 transparent LA-mode PNG from school-settings spec) embedded in PDF crashes WeasyPrint + Pillow 12.2 when specs overlap in fullyParallel mode
+- Race condition: m7_02 e2 uploads logo, m3_08 e1 generates receipt with embedded logo, then m7_02 e2 deletes it — collision window ~500ms
+- Not a regression; deterministic failure only when timing aligns
+- Found hardcoded PNG fixture in test/e2e/specs/admin/school-settings.spec.ts:9-12
+- Documented 3 candidate fixes (swap PNG format, isolate test state, harden backend validation)
+
+**Output:** Analysis documented in memory; no code changes needed yet
+
+---
+
 Session 1 — March 28, 6:33 AM (qmd://sessions/session-2026-03-28-06-33-0e6673a3.md)
 
 Mailreeper: Email Rule Engine

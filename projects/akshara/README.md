@@ -27,6 +27,11 @@
 - M7-02 crossed midnight and completed on 2026-05-31.
 - Student E2E failures on 2026-05-31 were due to shared test-state drift, not feature regressions.
 
+## Latest Updates (2026-07-23)
+- E2E flake in m3_08 receipt PDF analyzed: WeasyPrint 69 + Pillow 12.2 fail on 1×1 LA-mode PNG (from m7_02 school-settings fixture) when embedded as data URI
+- Race condition identified: m7_02 e2 uploads/deletes logo in ~500ms window, m3_08 e1 receipt generate can collide and embed broken image
+- Candidates to fix: swap PNG format to RGBA, isolate test tenant state, or validate/re-encode uploaded assets in backend
+
 ## Next Actions
-- Branch and open PR for the pending E2E-only fix currently in working tree on main.
+- Decide on E2E flake fix strategy (PNG format / test isolation / backend hardening)
 - Continue module delivery with the same spec -> implementation -> FAQ merge discipline.
