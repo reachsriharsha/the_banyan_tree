@@ -4,17 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "e096d0f5d555ec0c",
+        "id": "c328a31a940f29d9",
         "type": "tabs",
         "children": [
           {
-            "id": "a636b4a3272fa4db",
+            "id": "390e361845de7f0a",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "sessions/session-2026-02-21-05-29-5ed5f3bc.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "session-2026-02-21-05-29-5ed5f3bc"
             }
           }
         ]
@@ -74,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 235.5
+    "width": 414.5
   },
   "right": {
     "id": "dc2bd0d48d5d9893",
@@ -177,45 +181,47 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "a636b4a3272fa4db",
+  "active": "390e361845de7f0a",
   "lastOpenFiles": [
-    "Untitled.canvas",
-    "projects/m5stack_sarvam_voice_agent/README.md",
-    "daily/2026/04/2026-04-29.md",
-    "projects/m5stack_sarvam_voice_agent",
-    "projects/openclaw_exploration/README.md",
-    "projects/openclaw_exploration",
-    "projects/pi_dev_cursor_ollama/README.md",
-    "projects/pi_dev_cursor_ollama",
-    "daily/2026/05/2026-05-29.md",
-    "daily/2026/05/2026-05-28.md",
-    "sessions/session-2026-05-28-13-20-582a08e7.md",
-    "sessions/session-2026-05-29-04-57-65efbdde.md",
-    "daily/2026/05/2026-05-27.md",
-    "daily/2026/05",
-    "sessions/session-2026-04-29-03-15-b5d3621f.md",
-    "sessions/session-2026-05-20-14-54-5aaa140a.md",
-    "sessions/session-2026-05-21-14-22-91cb0313.md",
-    "sessions/session-2026-05-27-14-16-729d23e7.md",
-    "sessions/session-2026-05-20-14-55-89be53f8.md",
-    "sessions/session-2026-04-28-18-20-4099a8ba.md",
-    "daily/2026/04/2026-04-17.md",
-    "daily/2026/04/2026-04-21.md",
-    "daily/2026/04/2026-04-24.md",
-    "daily/2026/03/2026-03-29.md",
-    "sessions/session-2026-04-23-19-00-c51c2b60.md",
-    "projects/ai_investment_analysis/README.md",
-    "projects/ai_investment_analysis",
-    "daily/2026/03/2026-03-27.md",
-    "things_i_completed.md",
-    "daily/2026/03/2026-03-28.md",
+    "projects/akshara/README_Akshara.md",
+    "daily/2026/07/2026-07-21.md",
+    "daily/2026/07/2026-07-22.md",
+    "daily/2026/07/2026-07-23.md",
+    "people/README.md",
+    "daily/2026/07/2026-07-22.md.tmp.28600.dc630b5c33f2",
+    "things_to_go_through/List of things to go through.md",
+    "daily/2026/07/2026-07-20.md",
+    "daily/2026/07/2026-07-19.md",
+    "daily/2026/07/2026-07-18.md",
+    "daily/2026/07/2026-07-15.md",
+    "daily/2026/07/2026-07-11.md",
+    "daily/2026/07/2026-07-10.md",
+    "daily/2026/07/2026-07-09.md",
+    "daily/2026/07/2026-07-06.md",
+    "daily/2026/07/2026-07-03.md",
+    "Untitled 1.canvas",
+    "daily/2026/06/2026-06-03.md",
+    "daily/2026/06/2026-06-30.md",
+    "daily/2026/06/2026-06-27.md",
+    "daily/2026/06/2026-06-23.md",
+    "daily/2026/06/2026-06-22.md",
+    "+Daily Notes.md",
+    "daily/2026/06/2026-06-20.md",
+    "daily/2026/06/2026-06-15.md",
+    "daily/2026/06/2026-06-14.md",
+    "daily/2026/06/2026-06-11.md",
     "daily/2026/03/2026-03-25.md",
+    "daily/2026/06",
+    "daily/2026/07",
+    "Untitled.canvas",
+    "projects/m5stack_sarvam_voice_agent",
+    "projects/openclaw_exploration",
+    "projects/pi_dev_cursor_ollama",
+    "daily/2026/05",
+    "projects/ai_investment_analysis",
     "zzz_all_attachments/The-Complete-Guide-to-Building-Skill-for-Claude.pdf",
     "zzz_all_attachments/Pasted image 20260318093944.png",
     "zzz_all_attachments/Pasted image 20260318093801.png",
-    "hardware",
-    "things_to_go_through",
-    "projects/daari/daariparent",
-    "projects/daari/DaariDriver/Untitled"
+    "hardware"
   ]
 }
