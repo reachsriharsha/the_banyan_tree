@@ -9,8 +9,26 @@
 - E2E reliability hardening completed; remaining action is to branch and open PR for pending test-only fix in working tree.
 
 ## Linked Daily Updates
-- [[daily/2026/05/2026-05-30|2026-05-30]]
-- [[daily/2026/05/2026-05-31|2026-05-31]]
+
+### June 2026
+- [[daily/2026/06/2026-06-03|2026-06-03]] — Payment sandbox learning (card payments, Razorpay)
+- [[daily/2026/06/2026-06-11|2026-06-11]] — UPI payment learning module
+- [[daily/2026/06/2026-06-14|2026-06-14]] — UPI sandbox debugging
+- [[daily/2026/06/2026-06-22|2026-06-22]] — Card/UPI payment debugging
+
+### July 2026
+- [[daily/2026/07/2026-07-03|2026-07-03]] — Feature planning M3-01 (fee heads)
+- [[daily/2026/07/2026-07-06|2026-07-06]] — M3-03 audit + M3-04 (concessions) spec
+- [[daily/2026/07/2026-07-09|2026-07-09]] — Seed data audit & refresh
+- [[daily/2026/07/2026-07-10|2026-07-10]] — WeasyPrint DYLD fix + DB schema doc
+- [[daily/2026/07/2026-07-11|2026-07-11]] — Parent RBAC over-grant analysis & fix spec
+- [[daily/2026/07/2026-07-15|2026-07-15]] — DYLD error analysis + DB connection architecture
+- [[daily/2026/07/2026-07-18|2026-07-18]] — Seed setup Q + API documentation
+- [[daily/2026/07/2026-07-19|2026-07-19]] — Super admin bug + onboarding guide design
+- [[daily/2026/07/2026-07-20|2026-07-20]] — School settings UI tabs restructuring
+- [[daily/2026/07/2026-07-21|2026-07-21]] — Academic year status + staff phone sync + Docker secondary env
+- [[daily/2026/07/2026-07-22|2026-07-22]] — Employee ID validation + TCO calculator
+- [[daily/2026/07/2026-07-23|2026-07-23]] — E2E flake analysis (m3_08 receipt PDF)
 
 ## Delivery Highlights (2026-05-30 to 2026-05-31)
 - M1-10 Audit log infra (per-tenant audit_events).
