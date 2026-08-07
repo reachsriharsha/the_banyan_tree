@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How I Work — Claude Session Analytics</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb;
+    --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --baseline: #c3c2b7; --ring: rgba(11,11,11,0.10);
+    --zero: #f0efec;
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+    --seq: #cde2fb,#b7d3f6,#9ec5f4,#86b6ef,#6da7ec,#5598e7,#3987e5,#2a78d6,#256abf,#1c5cab,#184f95,#104281,#0d366b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19;
+      --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --baseline: #383835; --ring: rgba(255,255,255,0.10);
+      --zero: #262624;
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+      --seq: #0d366b,#104281,#184f95,#1c5cab,#256abf,#2a78d6,#3987e5,#5598e7,#6da7ec,#86b6ef,#9ec5f4,#b7d3f6,#cde2fb;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--page); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 32px 20px 80px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  .sub { color: var(--ink-2); margin-top: 4px; font-size: 14px; }
+  h2 { font-size: 17px; font-weight: 650; margin: 40px 0 4px; letter-spacing: -0.01em; }
+  h2 + .sub { margin-bottom: 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; margin-top: 22px; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--ring); border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .tile .lbl { font-size: 12.5px; color: var(--ink-2); }
+  .tile .val { font-size: 27px; font-weight: 600; margin-top: 2px; }
+  .tile .note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--ring); border-radius: 12px;
+    padding: 18px 18px 14px; margin-top: 14px; position: relative; overflow-x: auto;
+  }
+  .card h3 { font-size: 14.5px; font-weight: 650; }
+  .card .sub { font-size: 13px; margin: 1px 0 12px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--ink-2); margin: 4px 0 10px; }
+  .legend .key { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .insight {
+    border-left: 3px solid var(--s1); padding: 2px 0 2px 12px; margin: 14px 0 0;
+    color: var(--ink-2); font-size: 13.5px;
+  }
+  .insight b { color: var(--ink); font-weight: 600; }
+  svg { display: block; font: 11.5px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  svg text { fill: var(--muted); }
+  svg .lab { fill: var(--ink-2); }
+  svg .val { fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+  #tip {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--ink); color: var(--page); font-size: 12.5px; line-height: 1.45;
+    padding: 7px 10px; border-radius: 7px; max-width: 280px; box-shadow: 0 4px 14px rgba(0,0,0,.25);
+  }
+  details { margin-top: 26px; }
+  summary { cursor: pointer; color: var(--ink-2); font-size: 14px; }
+  table { border-collapse: collapse; margin-top: 12px; font-size: 13px; width: 100%; }
+  th, td { text-align: left; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--grid); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 44px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>How I Work</h1>
+  <div class="sub" id="hdr"></div>
+  <div class="kpis" id="kpis"></div>
+  <div id="sections"></div>
+
+  <details id="tableview"><summary>Data table — all sessions</summary><div id="tbl"></div></details>
+  <footer id="foot"></footer>
+</div>
+<div id="tip"></div>
+<script src="data.js"></script>
+<script>
+'use strict';
+const D = window.WORKDATA;
+const css = k => getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+let SEQ, S, INK2, MUTED, GRID, BASE, ZERO, SURF;
+function loadTheme() {
+  SEQ = css('--seq').split(',').map(s => s.trim());
+  S = [css('--s1'), css('--s2'), css('--s3'), css('--s4'), css('--s5')];
+  INK2 = css('--ink-2'); MUTED = css('--muted'); GRID = css('--grid');
+  BASE = css('--baseline'); ZERO = css('--zero'); SURF = css('--surface');
+}
+const fmt = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e4 ? Math.round(n/1e3)+'K'
+             : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(Math.round(n));
+const hrs = m => m >= 60 ? (m/60).toFixed(m >= 600 ? 0 : 1)+'h' : Math.round(m)+'m';
+const DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+/* ---------- tooltip ---------- */
+const tip = document.getElementById('tip');
+function bindTips(root) {
+  root.querySelectorAll('[data-tip]').forEach(el => {
+    el.addEventListener('mousemove', e => {
+      tip.innerHTML = el.dataset.tip; tip.style.display = 'block';
+      const w = tip.offsetWidth;
+      tip.style.left = Math.min(e.clientX + 14, innerWidth - w - 10) + 'px';
+      tip.style.top = (e.clientY + 14) + 'px';
+    });
+    el.addEventListener('mouseleave', () => tip.style.display = 'none');
+  });
+}
+
+/* ---------- aggregate helpers ---------- */
+const sessions = D.sessions;
+const totalMin = sessions.reduce((a,s)=>a+Math.max(s.duration_min,1),0);
+const allPRs = new Set(); Object.values(D.prs_by_week).forEach(l=>l.forEach(p=>allPRs.add(p)));
+const days = Object.keys(D.calendar);
+const projTotals = {};
+sessions.forEach(s => projTotals[s.project] = (projTotals[s.project]||0) + Math.max(s.duration_min,1));
+const topProjects = Object.entries(projTotals).sort((a,b)=>b[1]-a[1]).slice(0,4).map(e=>e[0]);
+const projOf = p => topProjects.includes(p) ? p : 'Other';
+const PROJ_SERIES = [...topProjects, 'Other'];
+
+function weekRange() {
+  const ws = Object.keys(D.weekly_project_minutes).sort();
+  const out = []; if (!ws.length) return out;
+  let [y,w] = ws[0].split('-W').map(Number);
+  const [ey,ew] = ws[ws.length-1].split('-W').map(Number);
+  while (y < ey || (y === ey && w <= ew)) {
+    out.push(`${y}-W${String(w).padStart(2,'0')}`);
+    if (++w > 52) { w = 1; y++; }
+  }
+  return out;
+}
+const WEEKS = weekRange();
+const wLabel = w => 'W' + w.split('-W')[1];
+
+/* ---------- SVG primitives ---------- */
+function svgEl(w, h) {
+  const s = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  s.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  s.setAttribute('width','100%');
+  s.style.maxWidth = w + 'px';
+  return s;
+}
+function el(tag, attrs, parent) {
+  const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+/* bar with 4px rounded data-end, square baseline (grows up) */
+function barPath(x, yTop, w, h, r) {
+  r = Math.min(r, h, w/2);
+  return `M${x},${yTop+h} L${x},${yTop+r} Q${x},${yTop} ${x+r},${yTop} L${x+w-r},${yTop} Q${x+w},${yTop} ${x+w},${yTop+r} L${x+w},${yTop+h} Z`;
+}
+function card(parent, title, sub) {
+  const c = document.createElement('div'); c.className = 'card';
+  c.innerHTML = `<h3>${title}</h3><div class="sub">${sub}</div>`;
+  parent.appendChild(c); return c;
+}
+function legend(cardEl, items) {
+  const l = document.createElement('div'); l.className = 'legend';
+  l.innerHTML = items.map(([name, color]) =>
+    `<span class="key"><span class="dot" style="background:${color}"></span>${esc(name)}</span>`).join('');
+  cardEl.appendChild(l);
+}
+function seqColor(v, max) {
+  if (v <= 0) return ZERO;
+  const i = Math.min(SEQ.length-1, Math.floor(Math.pow(v/max, 0.6) * SEQ.length));
+  return SEQ[i];
+}
+function insight(cardEl, html) {
+  const d = document.createElement('div'); d.className = 'insight'; d.innerHTML = html;
+  cardEl.appendChild(d);
+}
+
+/* ================= KPI row ================= */
+function renderKPIs() {
+  const desktop = sessions.filter(s=>s.source==='desktop').length;
+  const first = sessions.reduce((a,s)=>s.start<a?s.start:a, sessions[0].start);
+  const totTok = Object.values(D.tokens_by_week).reduce((a,t)=>a+(t.output||0),0);
+  document.getElementById('hdr').textContent =
+    `Every Claude session since ${first.slice(0,10)} — CLI + Claude Desktop · generated ${D.generated_at.slice(0,16).replace('T',' ')}`;
+  const k = [
+    ['Sessions', sessions.length, `${sessions.length-desktop} CLI · ${desktop} Desktop`],
+    ['Active days', days.length, 'days with ≥1 session'],
+    ['Time in session', hrs(totalMin), 'first→last message'],
+    ['PRs shipped', allPRs.size, 'distinct “PR #N” mentions'],
+    ['Claude turns', fmt(D.turn_count), 'API turns (CLI)'],
+    ['Output tokens', fmt(totTok), 'Claude-written'],
+  ];
+  document.getElementById('kpis').innerHTML = k.map(([l,v,n]) =>
+    `<div class="tile"><div class="lbl">${l}</div><div class="val">${v}</div><div class="note">${n}</div></div>`).join('');
+}
+
+/* ================= punch card ================= */
+function renderPunch(parent) {
+  const c = card(parent, 'Weekly rhythm — punch card',
+    'Messages sent by weekday × hour, all sessions');
+  const cw = 34, ch = 21, L = 44, T = 22;
+  const W = L + 24*cw + 8, H = T + 7*ch + 26;
+  const svg = svgEl(W, H);
+  const max = Math.max(...D.punchcard.flat());
+  for (let h = 0; h < 24; h += 3)
+    el('text', {x: L + h*cw + cw/2, y: T - 8, 'text-anchor':'middle'}, svg)
+      .textContent = String(h).padStart(2,'0');
+  D.punchcard.forEach((row, d) => {
+    el('text', {x: L - 8, y: T + d*ch + ch/2 + 4, 'text-anchor':'end', class:'lab'}, svg).textContent = DOW[d];
+    row.forEach((v, h) => {
+      el('rect', {x: L + h*cw, y: T + d*ch, width: cw-2, height: ch-2, rx: 3,
+        fill: seqColor(v, max),
+        'data-tip': `<b>${DOW[d]} ${String(h).padStart(2,'0')}:00–${String(h).padStart(2,'0')}:59</b><br>${v} message${v===1?'':'s'}`}, svg);
+    });
+  });
+  const morn = sumHours(5,9), night = sumHours(19,23), aft = sumHours(12,18);
+  const tot = sumHours(0,24);
+  c.appendChild(svg); bindTips(c);
+  const peak = peakHour();
+  insight(c, `Peak hour: <b>${String(peak.h).padStart(2,'0')}:00 on ${DOW[peak.d]}s</b>. ` +
+    `<b>${Math.round(morn/tot*100)}%</b> of activity lands 05:00–09:59 (the dawn shift), ` +
+    `${Math.round(aft/tot*100)}% in the afternoon, ${Math.round(night/tot*100)}% after 19:00.`);
+}
+function sumHours(a, b) { let t = 0; D.punchcard.forEach(r => { for (let h=a; h<=b && h<24; h++) t += r[h]; }); return t; }
+function peakHour() {
+  let best = {v:-1};
+  D.punchcard.forEach((r,d)=>r.forEach((v,h)=>{ if (v>best.v) best={v,d,h}; }));
+  return best;
+}
+
+/* ================= calendar heatmap ================= */
+function renderCalendar(parent) {
+  const c = card(parent, 'Session calendar', 'Active minutes per day (session first→last message)');
+  const dates = days.map(d => new Date(d + 'T12:00:00'));
+  const start = new Date(dates[0]); start.setDate(start.getDate() - ((start.getDay()+6)%7));
+  const end = dates[dates.length-1];
+  const cell = 15, T = 20, L = 34;
+  const nweeks = Math.ceil(((end - start)/864e5 + 1) / 7);
+  const svg = svgEl(L + nweeks*cell + 6, T + 7*cell + 8);
+  [0,2,4,6].forEach(d =>
+    el('text', {x: L-6, y: T + d*cell + cell-4, 'text-anchor':'end', class:'lab'}, svg).textContent = DOW[d]);
+  const max = Math.max(...Object.values(D.calendar));
+  let lastMonth = new Date(start).getMonth();
+  for (let i = 0; ; i++) {
+    const dt = new Date(start); dt.setDate(dt.getDate() + i);
+    if (dt > end) break;
+    const wk = Math.floor(i/7), dow = i%7;
+    /* label each week-column whose Monday lands in a new month */
+    if (dow === 0 && dt.getMonth() !== lastMonth) {
+      lastMonth = dt.getMonth();
+      el('text', {x: L + wk*cell, y: T - 7}, svg).textContent = MON[lastMonth];
+    }
+    const key = dt.toISOString().slice(0,10);
+    const v = D.calendar[key] || 0;
+    el('rect', {x: L + wk*cell, y: T + dow*cell, width: cell-2, height: cell-2, rx: 3,
+      fill: seqColor(v, max),
+      'data-tip': `<b>${key}</b> (${DOW[dow]})<br>${v ? hrs(v)+' in session' : 'no sessions'}`}, svg);
+  }
+  c.appendChild(svg); bindTips(c);
+  const streak = longestStreak();
+  const busiest = Object.entries(D.calendar).sort((a,b)=>b[1]-a[1])[0];
+  insight(c, `<b>${days.length} active days</b>; longest streak <b>${streak} days</b>. ` +
+    `Biggest day: <b>${busiest[0]}</b> with ${hrs(busiest[1])} in session.`);
+}
+function longestStreak() {
+  let best = 0, cur = 0, prev = null;
+  days.forEach(d => {
+    const t = new Date(d).getTime();
+    cur = (prev !== null && t - prev === 864e5) ? cur+1 : 1;
+    best = Math.max(best, cur); prev = t;
+  });
+  return best;
+}
+
+/* ================= weekly stacked project bars ================= */
+function renderProjects(parent) {
+  const c = card(parent, 'Where the weeks went',
+    'Hours per project per week — top 4 projects, rest folded into Other');
+  legend(c, PROJ_SERIES.map((p,i)=>[p, S[i]]));
+  const L = 40, T = 8, bw = 26, gap = 12, H = 240, bot = 34;
+  const W = L + WEEKS.length*(bw+gap) + 6;
+  const svg = svgEl(W, H + bot);
+  const weekTot = WEEKS.map(w => {
+    const per = {}; PROJ_SERIES.forEach(p=>per[p]=0);
+    const m = D.weekly_project_minutes[w] || {};
+    Object.entries(m).forEach(([p,v]) => per[projOf(p)] += v);
+    return per;
+  });
+  const max = Math.max(...weekTot.map(p => Object.values(p).reduce((a,b)=>a+b,0)), 60);
+  const yScale = v => v/max * (H - T);
+  /* y ticks */
+  const step = max > 1200 ? 600 : 300;
+  for (let v = 0; v <= max; v += step) {
+    const y = H - yScale(v);
+    el('line', {x1: L, x2: W-4, y1: y, y2: y, stroke: GRID, 'stroke-width': 1}, svg);
+    el('text', {x: L-6, y: y+4, 'text-anchor':'end'}, svg).textContent = (v/60)+'h';
+  }
+  WEEKS.forEach((w, i) => {
+    const x = L + i*(bw+gap);
+    let y = H;
+    PROJ_SERIES.forEach((p, si) => {
+      const v = weekTot[i][p]; if (v <= 0) return;
+      const h = yScale(v);
+      const seg = el('path', {d: barPath(x, y-h, bw, h, si === topSegIdx(weekTot[i]) ? 4 : 0),
+        fill: S[si],
+        'data-tip': `<b>${w}</b> · ${esc(p)}<br>${hrs(v)}`}, svg);
+      seg.setAttribute('stroke', SURF); seg.setAttribute('stroke-width', '1');
+      y -= h;
+    });
+    if (i % 2 === 0)
+      el('text', {x: x+bw/2, y: H+16, 'text-anchor':'middle'}, svg).textContent = wLabel(w);
+  });
+  el('line', {x1: L, x2: W-4, y1: H, y2: H, stroke: BASE, 'stroke-width': 1}, svg);
+  c.appendChild(svg); bindTips(c);
+  const akshara = projTotals[topProjects[0]] || 0;
+  insight(c, `<b>${topProjects[0]}</b> takes <b>${Math.round(akshara/totalMin*100)}%</b> of all session time. ` +
+    `Weekly peak: <b>${hrs(Math.max(...weekTot.map(p=>Object.values(p).reduce((a,b)=>a+b,0))))}</b>.`);
+}
+function topSegIdx(per) { /* last drawn segment gets the rounded cap */
+  for (let i = PROJ_SERIES.length-1; i >= 0; i--) if (per[PROJ_SERIES[i]] > 0) return i;
+  return 0;
+}
+
+/* ================= builder vs analyst ================= */
+function renderSources(parent) {
+  const c = card(parent, 'Builder vs Analyst', 'Sessions per month: CLI (code) vs Claude Desktop (research)');
+  legend(c, [['CLI — building software', S[0]], ['Desktop — research & analysis', S[1]]]);
+  const months = {};
+  sessions.forEach(s => {
+    const m = s.start.slice(0,7);
+    months[m] = months[m] || {cli:0, desktop:0};
+    months[m][s.source === 'desktop' ? 'desktop' : 'cli']++;
+  });
+  const keys = Object.keys(months).sort();
+  const L = 30, T = 18, H = 190, bw = 18, gg = 4, grp = bw*2+gg+26;
+  const W = L + keys.length*grp + 6;
+  const svg = svgEl(W, H + 34);
+  const max = Math.max(...keys.map(k => Math.max(months[k].cli, months[k].desktop)));
+  keys.forEach((k, i) => {
+    const x = L + i*grp;
+    ['cli','desktop'].forEach((src, si) => {
+      const v = months[k][src];
+      const h = v/max * (H-T);
+      if (v > 0) {
+        el('path', {d: barPath(x + si*(bw+gg), H-h, bw, h, 4), fill: S[si],
+          'data-tip': `<b>${k}</b><br>${src === 'cli' ? 'CLI' : 'Desktop'}: ${v} session${v===1?'':'s'}`}, svg);
+        el('text', {x: x + si*(bw+gg) + bw/2, y: H-h-5, 'text-anchor':'middle', class:'val'}, svg).textContent = v;
+      }
+    });
+    const [yy, mm] = k.split('-');
+    el('text', {x: x + bw + gg/2, y: H+16, 'text-anchor':'middle'}, svg).textContent = MON[+mm-1];
+  });
+  el('line', {x1: L-4, x2: W-4, y1: H, y2: H, stroke: BASE, 'stroke-width': 1}, svg);
+  c.appendChild(svg); bindTips(c);
+  const d = sessions.filter(s=>s.source==='desktop');
+  insight(c, `Two modes of work: the CLI is the <b>builder</b> (${sessions.length - d.length} sessions, mostly code), ` +
+    `Desktop is the <b>analyst</b> (${d.length} sessions — investment research, presentations, finance).`);
+}
+
+/* ================= session types ================= */
+function renderTypes(parent) {
+  const c = card(parent, 'What kind of sessions', 'Heuristic classification from prompts & outcomes');
+  const TYPES = [['shipping','Shipping — PRs merged'], ['building','Building — create / fix / implement'],
+                 ['analysis','Analysis — “don’t change code”'], ['discussion','Discussion / planning']];
+  const counts = {}; sessions.forEach(s => counts[s.type] = (counts[s.type]||0)+1);
+  legend(c, TYPES.map(([t,lab],i)=>[`${lab} (${counts[t]||0})`, S[i]]));
+  const W = 640, bh = 22;
+  const svg = svgEl(W, bh + 26);
+  let x = 0; const tot = sessions.length;
+  TYPES.forEach(([t,lab], i) => {
+    const v = counts[t] || 0; if (!v) return;
+    const w = v/tot * W;
+    el('rect', {x, y: 4, width: Math.max(w-2, 1), height: bh, rx: 4, fill: S[i],
+      'data-tip': `<b>${lab}</b><br>${v} sessions · ${Math.round(v/tot*100)}%`}, svg);
+    if (w > 46) {
+      const inside = el('text', {x: x + w/2 - 1, y: 4 + bh/2 + 4, 'text-anchor':'middle',
+        style: 'font-weight:600'}, svg);
+      inside.textContent = Math.round(v/tot*100) + '%';
+      inside.setAttribute('fill', i === 3 || i === 2 ? '#0b0b0b' : '#ffffff');
+    }
+    x += w;
+  });
+  c.appendChild(svg); bindTips(c);
+  const ship = (counts.shipping||0), ana = (counts.analysis||0);
+  insight(c, `For every analysis-only session there are <b>${(ship/Math.max(ana,1)).toFixed(1)} shipping sessions</b>. ` +
+    `The “analyze first, don’t touch code” pattern is a deliberate habit — ${ana} sessions.`);
+}
+
+/* ================= durations ================= */
+function renderDurations(parent) {
+  const c = card(parent, 'Session length', 'Distribution of session durations');
+  const buckets = [['<5m',0,5],['5–15m',5,15],['15–30m',15,30],['30–60m',30,60],['1–2h',60,120],['2–4h',120,240],['4h+',240,1e9]];
+  const counts = buckets.map(([,a,b]) => sessions.filter(s=>s.duration_min>=a&&s.duration_min<b).length);
+  const L = 8, H = 170, bw = 42, gap = 22;
+  const W = L + buckets.length*(bw+gap);
+  const svg = svgEl(W, H + 36);
+  const max = Math.max(...counts);
+  counts.forEach((v, i) => {
+    const h = v/max*(H-14);
+    const x = L + i*(bw+gap);
+    el('path', {d: barPath(x, H-h, bw, Math.max(h,2), 4), fill: S[0],
+      'data-tip': `<b>${buckets[i][0]}</b><br>${v} sessions`}, svg);
+    el('text', {x: x+bw/2, y: H-h-6, 'text-anchor':'middle', class:'val'}, svg).textContent = v;
+    el('text', {x: x+bw/2, y: H+16, 'text-anchor':'middle'}, svg).textContent = buckets[i][0];
+  });
+  el('line', {x1: 0, x2: W, y1: H, y2: H, stroke: BASE, 'stroke-width': 1}, svg);
+  c.appendChild(svg); bindTips(c);
+  const sorted = sessions.map(s=>s.duration_min).sort((a,b)=>a-b);
+  const med = sorted[Math.floor(sorted.length/2)];
+  const longest = sessions.reduce((a,s)=>s.duration_min>a.duration_min?s:a, sessions[0]);
+  insight(c, `Median session: <b>${hrs(med)}</b>. Longest: <b>${hrs(longest.duration_min)}</b> ` +
+    `(${esc(longest.project)}, ${longest.start.slice(0,10)}).`);
+}
+
+/* ================= tools ================= */
+function renderTools(parent) {
+  const c = card(parent, 'Claude’s hands', 'Most-used tools across all CLI turns');
+  const entries = Object.entries(D.tools).slice(0, 10);
+  const L = 110, bh = 18, gap = 9, W = 620;
+  const svg = svgEl(W, entries.length*(bh+gap) + 6);
+  const max = entries[0][1];
+  entries.forEach(([name, v], i) => {
+    const y = i*(bh+gap);
+    const w = v/max*(W-L-56);
+    el('text', {x: L-8, y: y+bh-4, 'text-anchor':'end', class:'lab'}, svg).textContent = name;
+    /* horizontal bar: rounded data-end (right), square at baseline (left) */
+    el('path', {d: `M${L},${y} L${L+w-4},${y} Q${L+w},${y} ${L+w},${y+4} L${L+w},${y+bh-4} Q${L+w},${y+bh} ${L+w-4},${y+bh} L${L},${y+bh} Z`,
+      fill: S[0], 'data-tip': `<b>${esc(name)}</b><br>${v.toLocaleString()} calls`}, svg);
+    el('text', {x: L+w+7, y: y+bh-4, class:'val'}, svg).textContent = fmt(v);
+  });
+  el('line', {x1: L, x2: L, y1: 0, y2: entries.length*(bh+gap)-gap+2, stroke: BASE, 'stroke-width':1}, svg);
+  c.appendChild(svg); bindTips(c);
+  const [t1, t2] = entries;
+  insight(c, `<b>${esc(t1[0])}</b> dominates (${fmt(t1[1])} calls) — you drive Claude as a hands-on-keyboard ` +
+    `engineer, with ${esc(t2[0])} (${fmt(t2[1])}) close behind.`);
+}
+
+/* ================= tokens ================= */
+function renderTokens(parent) {
+  const c = card(parent, 'Output volume', 'Claude-written tokens per week (CLI)');
+  const L = 46, T = 12, H = 180, W = 640;
+  const svg = svgEl(W, H + 30);
+  /* usage tracking starts later than the transcripts — trim leading empty weeks
+     so a data gap doesn't render as "no activity" */
+  let first = WEEKS.findIndex(w => ((D.tokens_by_week[w] || {}).output || 0) > 0);
+  if (first < 0) first = 0;
+  const TW = WEEKS.slice(first);
+  const vals = TW.map(w => (D.tokens_by_week[w] || {}).output || 0);
+  const max = Math.max(...vals, 1);
+  const xs = i => L + i/Math.max(TW.length-1,1)*(W-L-12);
+  const ys = v => H - v/max*(H-T);
+  for (const fr of [0, .5, 1]) {
+    const y = ys(max*fr);
+    el('line', {x1: L, x2: W-8, y1: y, y2: y, stroke: GRID}, svg);
+    el('text', {x: L-6, y: y+4, 'text-anchor':'end'}, svg).textContent = fmt(max*fr);
+  }
+  const pts = vals.map((v,i)=>`${xs(i)},${ys(v)}`).join(' ');
+  el('polygon', {points: `${xs(0)},${H} ${pts} ${xs(vals.length-1)},${H}`, fill: S[0], opacity: 0.1}, svg);
+  el('polyline', {points: pts, fill: 'none', stroke: S[0], 'stroke-width': 2,
+    'stroke-linejoin':'round', 'stroke-linecap':'round'}, svg);
+  vals.forEach((v,i) => {
+    el('circle', {cx: xs(i), cy: ys(v), r: 4.5, fill: S[0], stroke: SURF, 'stroke-width': 2,
+      'data-tip': `<b>${TW[i]}</b><br>${v.toLocaleString()} output tokens`}, svg);
+    if (i % 2 === 0)
+      el('text', {x: xs(i), y: H+18, 'text-anchor':'middle'}, svg).textContent = wLabel(TW[i]);
+  });
+  c.appendChild(svg); bindTips(c);
+  const peakI = vals.indexOf(Math.max(...vals));
+  insight(c, `Peak output week: <b>${TW[peakI]}</b> with <b>${fmt(vals[peakI])}</b> tokens written by Claude. ` +
+    `Token tracking begins ${TW[0]}.`);
+}
+
+/* ================= PRs ================= */
+function renderPRs(parent) {
+  const c = card(parent, 'Shipping cadence', 'Distinct PRs referenced as merged, per week');
+  const L = 8, H = 150, bw = 24, gap = 14;
+  const weeks = WEEKS.filter(w => (D.prs_by_week[w]||[]).length || true);
+  const W = L + weeks.length*(bw+gap);
+  const svg = svgEl(W, H + 34);
+  const counts = weeks.map(w => (D.prs_by_week[w]||[]).length);
+  const max = Math.max(...counts, 1);
+  weeks.forEach((w, i) => {
+    const v = counts[i];
+    const h = v/max*(H-16);
+    const x = L + i*(bw+gap);
+    if (v > 0) {
+      el('path', {d: barPath(x, H-h, bw, h, 4), fill: S[2],
+        'data-tip': `<b>${w}</b> · ${v} PRs<br>#${(D.prs_by_week[w]||[]).join(', #')}`}, svg);
+      el('text', {x: x+bw/2, y: H-h-5, 'text-anchor':'middle', class:'val'}, svg).textContent = v;
+    }
+    if (i % 2 === 0)
+      el('text', {x: x+bw/2, y: H+16, 'text-anchor':'middle'}, svg).textContent = wLabel(w);
+  });
+  el('line', {x1: 0, x2: W, y1: H, y2: H, stroke: BASE, 'stroke-width': 1}, svg);
+  c.appendChild(svg); bindTips(c);
+  const peak = weeks[counts.indexOf(Math.max(...counts))];
+  insight(c, `<b>${allPRs.size} distinct PRs</b> across the period; hottest week <b>${peak}</b> ` +
+    `with ${Math.max(...counts)} PRs. Direct-from-session evidence — prompt mentions of merged PR numbers.`);
+}
+
+/* ================= table view ================= */
+function renderTable() {
+  const rows = [...sessions].sort((a,b)=>b.start.localeCompare(a.start));
+  document.getElementById('tbl').innerHTML =
+    `<table><thead><tr><th>Start</th><th>Source</th><th>Project</th><th>Type</th>
+     <th class="num">Duration</th><th class="num">Msgs</th><th class="num">PRs</th></tr></thead><tbody>` +
+    rows.map(s => `<tr><td>${s.start.replace('T',' ').slice(0,16)}</td><td>${s.source}</td>
+      <td>${esc(s.project)}</td><td>${s.type}</td>
+      <td class="num">${hrs(s.duration_min)}</td>
+      <td class="num">${s.n_user + s.n_assistant}</td>
+      <td class="num">${s.prs.length ? '#'+s.prs.join(', #') : '—'}</td></tr>`).join('') +
+    `</tbody></table>`;
+}
+
+/* ================= page ================= */
+function section(title, sub) {
+  const root = document.getElementById('sections');
+  const h = document.createElement('h2'); h.textContent = title; root.appendChild(h);
+  const s = document.createElement('div'); s.className = 'sub'; s.textContent = sub; root.appendChild(s);
+  return root;
+}
+function render() {
+  loadTheme();
+  document.getElementById('sections').innerHTML = '';
+  renderKPIs();
+  let r = section('Rhythm', 'When the work happens');
+  renderPunch(r); renderCalendar(r);
+  r = section('Projects', 'What the time goes to');
+  renderProjects(r);
+  const g1 = document.createElement('div'); g1.className = 'grid2'; r.appendChild(g1);
+  renderSources(g1); renderTypes(g1);
+  r = section('Working with Claude', 'How the sessions are driven');
+  const g2 = document.createElement('div'); g2.className = 'grid2'; r.appendChild(g2);
+  renderDurations(g2); renderTools(g2);
+  renderTokens(r);
+  r = section('Output', 'What actually shipped');
+  renderPRs(r);
+  renderTable();
+  document.getElementById('foot').textContent =
+    'Sources: vault session transcripts (CLI + Claude Desktop cowork imports), ~/.claude/usage.db, raw CLI transcripts, prompt history. ' +
+    'This is a frozen dated snapshot — run ./analytics/refresh.sh for a fresh one.';
+}
+render();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+</script>
+</body>
+</html>

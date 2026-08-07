@@ -1,5 +1,119 @@
 ---
 
+Session (2026-08-07 05:14) — clone_repo.sh backup script (qmd://sessions/session-2026-08-07-05-14-8ce0a896.md)
+
+**Project:** _(standalone tooling — repo `/Users/swbs/src/backup`)_
+
+- Wrote `clone_repo.sh`: takes a git URL, creates a `yyyy_mm_dd_hhmmss_<repo_name>` directory, and clones into it
+- Derives repo name from the URL (strips trailing `.git`), timestamps via `date +%Y_%m_%d_%H%M%S`, uses `set -euo pipefail` for fail-fast + usage error when the arg is missing
+
+---
+
+Session (2026-08-05 19:41) — Ad-hoc invoicing shipped; duplicate-warning pipeline started (qmd://sessions/session-2026-08-05-19-41-6ad2b173.md)
+
+**Project:** [[projects/akshara/README_Akshara|Akshara]]
+
+- Shipped `m3_19_adhoc_student_invoice` end-to-end (spec PR #324, impl PR #325, FAQ PR #327 — all merged): `POST /invoices/manual` (XOR student_ids/section_id targeting), `POST /invoices/{id}/cancel`, nullable `Invoice.description`, `list_invoices` join fix, frontend dialog; unit 409/409 and api 630/630 pass
+- Wrote `docs/housekeeping/db-connection-pooling.md` (database-per-tenant QueuePool analysis, DigitalOcean 22-connection exhaustion math, PgBouncer transaction-mode fix + NullPool/`prepare_threshold=None` changes)
+- Wrote `docs/housekeeping/small-institution-support.md` — decision record for dance/art/camp schools (season-as-academic-year, one-student-row-per-discipline, ad-hoc invoicing as the only code change needed)
+- Root-caused 39 api failures to `dev_db recreate` run without `--seed` (not a regression); fixed e2e `e1` (admin→parent role switch missing session reset) with a one-line `clearCookies()`
+- Created shared `.claude/settings.json` permission allowlist (+ local `/tmp` allows) in the akshara repo
+- Locked scope for `m2_03_duplicate_student_warning` (live debounced name+DOB check, red-bar UX, 409 + `acknowledge_duplicate` backstop) and started `/ship`: spec PR #329 merged (tracker Specced)
+- In progress at session end: Phase 2 (build) of duplicate-warning not yet merged; e2e webhook 422 flake handed to user
+
+---
+
+Session (2026-08-05 14:54) — Students pagination + Attendance nav investigation (qmd://sessions/session-2026-08-05-14-54-fcbcd0e0.md)
+
+**Project:** [[projects/akshara/README_Akshara|Akshara]]
+
+- Analysis only (no code changed, per request)
+- Confirmed the admin Students page uses cursor/keyset pagination (25/page, limit capped at 200) via TanStack `useInfiniteQuery` "Load more" — not a fetch-all
+- Flagged CSV export (`/students/export`) as the only fetch-everything path worth confirming it streams
+- Diagnosed the core confusion: the "Attendance" nav item routes to `HolidayCalendarPage` (m5_01), not an attendance view; recommended renaming it to "Holidays"
+- Mapped the 3 attendance nav entries to real destinations (Holiday Calendar / Mark Attendance / Attendance Register), gated by distinct RBAC perms
+- Suggested (not implemented) a server-side total-count for "1–25 of N" display
+
+---
+
+Session (2026-08-05 14:48) — Shipped 3 platform-console features via /ship (qmd://sessions/session-2026-08-05-14-48-5b2d3977.md)
+
+**Project:** [[projects/akshara/README_Akshara|Akshara]]
+
+- Shipped `m8_11_platform_console` (spec PR #318, impl #319, FAQ #320 — merged): new left nav, Home dashboard stat cards (Total/Active/Suspended/Pending-erase), redesigned tenants table, tenant detail page with cross-DB `SchoolSettings` read; added `admin_email`/`admin_phone` to `TenantOut` + `GET /platform/tenants/{slug}`
+- Shipped `m8_12_console_preselect` (spec #321, impl #322, FAQ #323 — merged): SMS page reads `?tenant=<slug>` preselect, Feature Flags "showing overrides for X" banner + presets, unit-tested `preselect.ts`
+- Shipped `m5_07_attendance_colors` (spec #326, impl #328 — merged; FAQ skipped): shared `attendance/status.ts`, exception-first color-coding on monthly register with legend + color-blind-safe letters
+- Investigated red e2e gate: confirmed `m3_19 e2` + `m3_10 e2` fail deterministically (HTTP 422 webhook) on clean main — pre-existing payment-webhook regression from the m3_19 fees merge, independent of the attendance change; `m2_09 e2` is the known `Date.now()` flake; flagged webhook regression to user (deferred)
+- All three at tracker Merged, `RELEASE_NOTES.md` regenerated
+
+---
+
+Session (2026-08-05 05:39) — Disable Communication nav for teachers (RBAC) (qmd://sessions/session-2026-08-05-05-39-1310467c.md)
+
+**Project:** [[projects/akshara/README_Akshara|Akshara]]
+
+- Fixed a teacher over-grant: dropped `communication:read` + `communication:send` from the teacher role in `backend/app/authz/catalog.py` (hides the nav item and closes the API together, no frontend change)
+- Flipped 4 tests asserting teacher access to assert denial (`m1_09 u1`, `m4_06 a9`, `m4_02 a8`, `m4_05 a9`); added E2E regression spec `teacher/sidebar-scope.spec.ts`
+- Ran full `run_all.sh` (caught 2 regressions the static search missed), re-ran clean; backend 5/5, api 27/27, e2e green
+- Ran a tracker-drift audit (0 total/passing drift across 84 rows); bumped `m1_09_*` rows `e:7/7 → 8/8` in a separate `chore(tracker)` commit
+- Opened/merged PR #317; updated spec docs + FAQ; saved a memory note to run the full API suite on RBAC-role changes
+
+---
+
+Session (2026-08-05 05:29) — DLT/SMS template system analysis (qmd://sessions/session-2026-08-05-05-29-203e344e.md)
+
+**Project:** [[projects/akshara/README_Akshara|Akshara]]
+
+- Analysis/discussion only (no code changed, per request)
+- Determined DLT template registration is super-admin only; school admins can't see or perform it
+- Documented that template bodies live in code (`TEMPLATE_CATALOG` in `communication/catalog.py`); changing one needs a code change + PR + `app.templates_sync` CLI
+- Established what's editable today: super admin sets per-school DLT template id + lifecycle status (draft→approved→active→disabled); activation without a DLT id → 422
+- Key finding: the requested "assign a template to a school" already exists as a backend dark feature (`GET/PUT/DELETE /api/v1/communication/notification-map`, school-admin `settings:update` gated) but has no UI
+- Surfaced open product questions (move template creation to a super-admin UI? who owns mapping overrides?) — parked
+
+---
+
+Session (2026-08-04 15:13) — SwimAcademy MVP built, dockerized, poolside UX (qmd://sessions/session-2026-08-04-15-13-b09feb68.md)
+
+**Project:** [[projects/swimmer progress tracker/Requirements|Swimmer Progress Tracker]] _(repo `cadencelanes`)_
+
+- Built the full SwimAcademy MVP from spec in one shot: FastAPI + SQLAlchemy 2.x backend, two-DB pattern (`control.db` + per-club `club_{id}.db`, 10 tables seeded with 5 styles / 7 events), phone+OTP JWT auth, RBAC, and all spec endpoints (club register/approval, coaches, student CRUD, sessions w/ auto-attendance, timings w/ auto personal-best, notes, assessments, computed progress report)
+- Built a React + Vite + Tailwind v4 + Recharts frontend (16 pages)
+- Packaged into a single Docker image via `./run.sh` (26-check smoke test), later migrated to docker-compose on an isolated bridge network with a restart policy; switched storage to a host bind mount for backup visibility
+- Made session types dynamic (keeps the one-per-type-per-day constraint); confirmed assistant coaches can create sessions
+- Rebuilt Timings into a poolside quick-entry tool (auto-detected session, tap-chip style/distance, present-swimmers Enter flow, inline PB feedback); added exact age (y/m/d) display
+- Added missing UI forms for coach notes + skill assessments; added a Coach/Analytics mode switch with a poolside bottom-tab home
+- Created reusable `seed_demo.py` + `DEMO_SCHOOL.md`; reseeded a category-based demo (24 students, 44 sessions over 4 weeks, ~160 timings, a competition session, assessments)
+
+---
+
+Session (2026-08-04 07:00) — Staff bulk import: XLSX migration + error visibility (qmd://sessions/session-2026-08-04-07-00-e63a3269.md)
+
+**Project:** [[projects/akshara/README_Akshara|Akshara]]
+
+- Diagnosed the original import failure as a delimiter mismatch (parser split `subjects` on `;` but the CSV used commas; "Art" ≠ seeded "Art & Craft")
+- Migrated staff import CSV→XLSX: `build_import_template_xlsx()` + `_parse_import_xlsx()` (openpyxl read-only, 10MB/1000-row guards, header check, numeric coercion); rewrote the frontend to a single validate-then-commit Import button
+- Added staff-import logging (`import.started`, per-row `row_failed`, `completed` now fires on dry-run); registered events in `log-schema.md`
+- Fixed a real bug: `row_failed` log used the reserved LogRecord attr `message` (would 500 every failing row) → renamed to `reason`
+- Fixed a cryptic 422: backend `_handle_problem` now logs a `request.problem` event; frontend surfaces `error.detail` instead of the bare status
+- Added tests (a11/a12 on real xlsx, a15 title-row 422, e2e e3/e4); updated the m2_10 spec set + FAQ
+- Shipped via 5 merged PRs (#312 feature, #314 error visibility, #313/#315/#316 tracker); `run_all.sh --fast` passed (609 api tests)
+
+---
+
+Session (2026-08-04 05:55) — SMS-only absence notification investigation (qmd://sessions/session-2026-08-04-05-55-e8347bb0.md)
+
+**Project:** [[projects/akshara/README_Akshara|Akshara]]
+
+- Investigation only (no code changed)
+- Documented the absence-SMS architecture: channel-agnostic port-adapter in `communication/` + `attendance/service.py` `notify_absences()` trigger; dedup via `AbsenceNotificationMark`, cancels on correction
+- Confirmed SMS is not deliverable yet (`PendingSender` placeholder, no real provider wired)
+- Confirmed there's no auto-dispatch — messages drained only by the manual/cron CLI `python -m app.messages_dispatch <tenant>` (or `--all`)
+- Answered how to send SMS only: disable other templates (recommended) / per-tenant `notification_mappings` override / edit `DEFAULT_MAP`; provided SQL
+- Noted template-management UI is scheduled under US-M4-01 (Sprint 13) but only the read endpoint has landed
+
+---
+
 Session (2026-07-23) — E2E Flake Analysis
 
 [[projects/akshara/README_Akshara|Akshara]]

@@ -30,6 +30,17 @@
 - [[daily/2026/07/2026-07-22|2026-07-22]] — Employee ID validation + TCO calculator
 - [[daily/2026/07/2026-07-23|2026-07-23]] — E2E flake analysis (m3_08 receipt PDF)
 
+## Linked Sessions
+
+### August 2026
+- [[sessions/session-2026-08-04-05-55-e8347bb0|2026-08-04 05:55]] — SMS-only absence notification investigation (analysis)
+- [[sessions/session-2026-08-04-07-00-e63a3269|2026-08-04 07:00]] — Staff bulk import: XLSX migration + error visibility (PRs #312–#316)
+- [[sessions/session-2026-08-05-05-29-203e344e|2026-08-05 05:29]] — DLT/SMS template system analysis (analysis)
+- [[sessions/session-2026-08-05-05-39-1310467c|2026-08-05 05:39]] — Disable Communication nav for teachers, RBAC (PR #317)
+- [[sessions/session-2026-08-05-14-48-5b2d3977|2026-08-05 14:48]] — 3 platform-console features via /ship (PRs #318–#328)
+- [[sessions/session-2026-08-05-14-54-fcbcd0e0|2026-08-05 14:54]] — Students pagination + Attendance-nav investigation (analysis)
+- [[sessions/session-2026-08-05-19-41-6ad2b173|2026-08-05 19:41]] — Ad-hoc invoicing shipped (PRs #324/#325/#327); duplicate-warning /ship started (PR #329)
+
 ## Delivery Highlights (2026-05-30 to 2026-05-31)
 - M1-10 Audit log infra (per-tenant audit_events).
 - M2-01 Academic year management.
